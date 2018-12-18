@@ -1,30 +1,4 @@
-/*
- *    This Applet was designed to be used in conjunction with
- *    "Computer Networking: A Top Down Approach"
- *    by James Kurose & Keith Ross.
- *    Terminology and specifications are based upon their description of the
- *    Selective Repeat protocol in chapter 3, section 4.
- *
- *    Written by Matthew Shatley and Chris Hoffman
- *    for Professor Paul Amer (amer@udel.edu)
- *    University of Delaware (2008)
- *
- *    Ideas for this applet are based on a Java Applet of Go Back N coded
- *    by Shamiul Azom as a project assigned by 
- *    Prof. Martin Reisslein, Arizona State University
- *    Course No. EEE-459/591. Spring 2001
- *
- *    Updated by Chris Hoffman  Fall 2011
- *    Addition of PausableThreadPoolExecutor to schedule pausable packet timers for each packet
- *    RetransmitOutstandingPackets now retransmit a single specified packet to better simulate SR
- *    Updated code layout and spacing to be more readable
- *    Each packet now has a PacketTimerTask in order to schedule a retransmission for each packet
- *
- *    A note on magic numbers: Magic numbers are horrible to have in your code in general.
- *    However, the graphics components of this applet provided no good way to remove the
- *    magic numbers from the code as locations for objects are specified in pixel coordinates. 
- *    We apologize in advance for any confusion this may cause in reading the code. 
- */
+
 
 import java.applet.Applet;
 import java.awt.Button;
@@ -49,39 +23,31 @@ public class SelectiveRepeat extends Applet implements ActionListener, Runnable
 {   
     private static final int ADVANCE_PACKET = 5;
     
-    // Default values of parameters for animation
-    // sender_window_len_def the sender can have a maximum of 5 outstanding
-    // un-acknowledged packets
+   
     final int sender_window_len_def = 5;
     
-    // how many packets the receiver can hold in memory without delivering data
-    // in the case of SelectiveRepeat we can hold 1(or the current packet) in
-    // memory. If another packet arrives the one in memory is discarded
+   
     final int receiver_window_len = 5;
     
-    // GUI components to describe how the Simulation should be drawn
+    
     final int pack_width_def = 10;
     final int pack_height_def = 30;
     final int h_offset_def = 100;
     final int v_offset_def = 50;
     final int v_clearance_def = 300;
     
-    // used for timeout values, thread.sleep() is specified in milliseconds
-    // so we convert to seconds for timeout processing.(1000 milliseconds = 1
-    // second)
+    
     final int TIMEOUT_MULTIPLIER = 1000;
     final int MIN_FPS = 3;
     final int FPS_STEP = 2;
     final int DESELECTED = -1;
     final int DEFAULT_FPS = 5;
-    // default to 20 Packets if no value is supplied
+   
     final int total_Packet_def = 20;
-    // 30 sec default timeout for retransmissions
+   
     final int time_out_sec_def = 25;
     
-    // Default colors of different Packets
-    // these have been matched as closely to the the text as possible
-    // Order of color values Red, Green, Blue
+  
     final Color unack_color = new Color(204, 230, 247);
     final Color ack_color = Color.yellow;
     final Color sel_color = Color.green;
@@ -89,60 +55,29 @@ public class SelectiveRepeat extends Applet implements ActionListener, Runnable
     final Color roam_ack_color = Color.yellow;
     final Color dest_color = Color.red;
     final Color received_ack = new Color(37, 135, 234);
-    
-    // base - our sending base - the next expected Packet to be received
-    // nextseqnum - the next sequence number that will be given to a newly
-    // created Packet
-    // selected - the index of the currently selected Packet in transmission
-    // lastKnownSucPacket - LAST KNOWN SUCcessful PACKET received by receiving
-    // node
+   
     int base, receiver_base, nextseqsum, fps, selected = DESELECTED, timeout,
 	timeoutPacket, lastKnownSucPacket;
     boolean timerFlag, timerSleep;
     
-    // define our buttons for actions available to be taken by the user
+   
     Button send, stop, fast, slow, kill, reset;
-    /*
-     * 2 threads run for the applet gbnTread - runs to create our animation and
-     * process Packets timerThread - created and sleeps for a specified period
-     * of time. On wake up performs timeout processing A timeout causes all of
-     * the outstanding Packets to be re-transmitted. NOTE: The text(Computer
-     * Networking: A Top Down Approach) specified a per Packet timer, however
-     * this is rarely implemented as there is a significant overhead in using
-     * that many timers. Logically, the only Packet that would ever timeout is
-     * the left most edge of the sending window as this has been in transmission
-     * the longest. Since a per Packet timer system is not implemented in
-     * practice we have simulated per Packet timers per the books description
-     * while using only a single timer.
-     */
+   
     Thread gbnThread, timerThread;
-    // Extension of ScheduleThreadPoolExecutor used to pause and resume each
-    // packets individual timer
+    
     PausableThreadPoolExecutor pausableThreadPoolExecutor;
     
-    TextArea output; // output variable used to write information in the text
-    // box
+    TextArea output;
     Dimension offDimension;
-    Image offImage; // implements double buffering to proved a smoother
-    // animation
-    Graphics offGraphics; // graphics component used for drawing
+    Image offImage; 
+    Graphics offGraphics; 
     SelectiveRepeatPacket sender[]; // sender array - holds the Packets being sent
     
-    // Declaring properties of our window
+  
     int window_len, pack_width, pack_height, h_offset, v_offset, v_clearance,
 	total_Packet, time_out_sec;
     
-    /***************************************************************************
-     * Method init *
-     * ************************************************************************
-     * Purpose: init method to set up applet for running - first method called
-     * on loading the code. Attempts to load parameters passed from HTML code
-     * contained in the website. If there is an error or no parameters are
-     * provided then the default values(declared above) are used. Global
-     * variables used: sender - array holding the Packets and the corresponding
-     * acks for the Packets sent in the applet output - console window for
-     * applet activities & messages
-     **************************************************************************/
+   
     public void init()
     {
 		// prevents layout manager from adjusting components in the applet
@@ -221,25 +156,13 @@ public class SelectiveRepeat extends Applet implements ActionListener, Runnable
 		add(kill);
 		add(reset);
 		
-		// print out message about the new authors of the code
-		output.append("- Selective Repeat Applet written by Matt Shatley & Chris Hoffman, 2008\n");
-		output.append("- Advised by Professor Paul D. Amer (amer@udel.edu), University of Delaware\n");
-		output.append("- Updated by Chris Hoffman, 2012\n\n");
 		
-		// tell user we are ready to begin demonstrating Go Back N
+		
+		
+		
 		output.append("-Ready to run. Press 'Send New' button to start.\n");
 	
-    }// End init() method
-    
-    /***************************************************************************
-     *                           Method Start                                  *
-     * *************************************************************************
-     * Purpose: Start method required for implementing multi-threading. Start is
-     * the first method called by a thread after creation. Procedures Calling:
-     * run Procedures Called: run Global Variables Used: gbnThread - creates new
-     * thread for first execution and starts thread(calling run method of
-     * thread)
-     **************************************************************************/
+    }
     public void start() 
     {
 		// Creating GBNThread and starting execution. After start method is run
@@ -248,36 +171,11 @@ public class SelectiveRepeat extends Applet implements ActionListener, Runnable
 		    gbnThread = new Thread(this);
 		gbnThread.start();
     }// End start() method
-    
-    /***************************************************************************
-     * Method run *
-     * **************************************************************** Purpose:
-     * Run method required by runnable interface. Determines which thread is
-     * calling and process accordingly. gbnThread produces the animation for the
-     * applet. The timerThread sleeps until timeout processing is needed to
-     * retransmit the sending window. Original code by Shamiul Azom
-     * Procedures/Functions Called: check_upto_n, paint/update(indirectly)
-     * Procedures/Functions Calling: main, start Local variables: currentThread -
-     * holds the identifier for the currently executing thread i - temporary
-     * variable used for loop control Global variables used: sender - array
-     * holding the Packets and the corresponding acks for the Packets sent in
-     * the applet output - console window to display information about the
-     * applet activities.
-     * 
-     * lastKnownSucPacket - holds the number of the last successful Packet to
-     * arrive gbnThread - thread to advance animation
-     **************************************************************************/
+  
     public void run()
     {
-		//force garbage collection - depending on garbage collection threads may be left
-		//executing even though they have been killed leading to unexpected behavior
 		System.gc();
-		/*
-		 * Figure out which thread called this run method since both the
-		 * SelectiveRepeat simulation thread and the timer thread call the same
-		 * run method. We must do this because there cannot be 2 run methods in
-		 * the same class.
-		 */
+		
 		boolean stopCheck = false;
 		if (sender[total_Packet - 1] != null) 
 		{
@@ -320,14 +218,8 @@ public class SelectiveRepeat extends Applet implements ActionListener, Runnable
 							sender[i].packet_timer_task.current_index = i;
 						}
 						
-					    // If the sender array for index[Packet number] is
-					    // marked as roaming, do the following, else do nothing
 						if (sender[i].on_way) 
 					    {
-							// If the sender array for index[Packet number]'s
-							// Packet position is not yet at its destination
-							// increase the Packets position by 5 and call a
-							// repaint to essentially move the Packet.
 							if (sender[i].Packet_pos < (v_clearance - pack_height))
 							{
 							    sender[i].Packet_pos += 5;
