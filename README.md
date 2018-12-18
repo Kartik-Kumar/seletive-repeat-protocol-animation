@@ -32,6 +32,6 @@ This project belongs to Computer Networking Subject , just uses applet animation
  
  just for my some requirement ,, i did some changes which may further reflected.
  
- NO copyrite .
+ NO copyright .
  
  Thanks to one who did wonderful animation to show selective repeat protocol.
